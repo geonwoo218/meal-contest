@@ -3,48 +3,72 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
 <%@include file="dbcon.jsp" %>
 <%
-String rankQuery = "SELECT menu_name, select_count FROM highschool_menu WHERE menu_date LIKE '202410%' ORDER BY select_count DESC";
-PreparedStatement rankPstmt = null;
-ResultSet rankRs = null;
+String query = "SELECT TO_CHAR(h1.menu_date,'YYYY-mm-DD'), h1.menu_name, h1.select_count, " +
+               "COUNT(*) OVER(PARTITION BY TO_CHAR(h1.menu_date,'YYYY-mm-DD')) AS menu_count, " +
+               "AVG(h1.select_count) OVER(PARTITION BY TO_CHAR(h1.menu_date,'YYYY-mm-DD')) AS avg_select_count " +
+               "FROM highschool_menu h1 " +
+               "ORDER BY avg_select_count DESC, TO_CHAR(h1.menu_date,'YYYY-mm-DD'), h1.menu_name";
+PreparedStatement pstmt = con.prepareStatement(query);
+ResultSet rs = pstmt.executeQuery();
 
-/*
-try {
-    rankPstmt = con.prepareStatement(rankQuery);
-    rankRs = rankPstmt.executeQuery();
-} catch (SQLException e) {
-    e.printStackTrace();
-    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "랭킹 데이터를 가져오는 중 오류가 발생했습니다.");
-}*/
+int rank = 1;
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <title>랭킹</title>
+    <link rel="stylesheet" href="assets/rank.css">
 </head>
 <body>
-    <h1>2024년 10월 랭킹</h1>
+    <h1>급식 랭킹</h1>
     <table border="1">
         <tr>
+        	<th>랭킹</th>
+            <th>날짜</th>
             <th>메뉴 이름</th>
             <th>선택 횟수</th>
+            <th>사진 보기</th>
         </tr>
-        <% 
-        if (rankRs != null) {
-            while (rankRs.next()) { 
-        %>
-            <tr>
-                <td><%= rankRs.getString("menu_name") %></td>
-                <td><%= rankRs.getInt("select_count") %></td>
-            </tr>
-        <% 
-            } 
-        } 
-        %>
+    <%
+    String currentDate = "";
+    int menuCount = 0;
+
+    while (rs.next()) {
+        String menuDate = rs.getString(1);
+        String menuName = rs.getString("menu_name");
+        int selectCount = rs.getInt("select_count");
+        int countInDate = rs.getInt("menu_count");
+        double avgSelectCount = rs.getDouble("avg_select_count");
+
+        if (!menuDate.equals(currentDate)) {
+            currentDate = menuDate;
+            menuCount = countInDate; // 그룹의 메뉴 수 설정
+    %>
+        <tr>
+        	<td rowspan="<%=menuCount %>"><%=rank %>등</td>
+            <td rowspan="<%= menuCount %>"><%= currentDate %></td>
+            <td class="menuname"><%= menuName %></td>
+            <td rowspan="<%= menuCount %>"><%= selectCount %></td>
+            <td rowspan="<%= menuCount %>">
+                <button type="button">사진보기</button>
+            </td>
+        </tr>
+    <%
+    rank ++;
+        } else {
+    %>
+        <tr>
+            <td class="menuname"><%= menuName %></td>
+        </tr>
+    <%
+        }
+    }
+    %>
     </table>
     <a href="index.jsp">메인으로</a>
 </body>
 </html>
 <%
-if (rankRs != null) rankRs.close();
-if (rankPstmt != null) rankPstmt.close();
+if (rs != null) rs.close();
+if (pstmt != null) pstmt.close();
 %>

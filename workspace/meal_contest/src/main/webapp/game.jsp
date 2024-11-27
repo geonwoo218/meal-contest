@@ -1,124 +1,159 @@
 <%@page import="java.sql.*"%>
 <%@page import="java.util.*"%>
 <%@page import="java.text.SimpleDateFormat"%>
-<%@page import="java.util.Date"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@include file="dbcon.jsp"%>
+<%@include file="dbcon.jsp" %>
 <!-- DB 연결 -->
-
+<%!
+	boolean gameStart = false;
+%>
 <%
-/*
- * 1. 후보 데이터 가져오기
- */
-String menuDate = request.getParameter("menu_date");
-if (menuDate == null) {
-    menuDate = "202410"; // Default to October 2024
-    System.out.println("menuDate is null, defaulting to: " + menuDate);
-} else {
-    System.out.println("menuDate from request: " + menuDate);
-}
-
 Connection conn = (Connection) session.getAttribute("con");
 if (conn == null) {
     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "DB 연결이 초기화되지 않았습니다.");
     return;
-} else {
-    System.out.println("DB연결 성공");
 }
 
-// 세션에서 후보 데이터를 확인하고 초기화
-List<String> currentCandidates = (List<String>) session.getAttribute("candidates");
-if (currentCandidates == null || currentCandidates.isEmpty()) {
-    currentCandidates = new ArrayList<>();
-    System.out.println("currentCandidates is empty. Fetching new candidates.");
+// 현재 라운드와 다음 라운드 리스트 초기화
+List<String> currentRound = (List<String>) session.getAttribute("currentRound");
+List<String> nextRound = (List<String>) session.getAttribute("nextRound");
+
+if (currentRound == null) {
+    currentRound = new ArrayList<>();
+    session.setAttribute("currentRound", currentRound);
+}
+
+if (nextRound == null) {
+    nextRound = new ArrayList<>();
+    session.setAttribute("nextRound", nextRound);
+}
+
+//DB에서 처음부터 데이터 불러오기
+if(!gameStart) {
+	
+	String query = "SELECT TO_CHAR(menu_date, 'YYYYMMDD') AS menu_date, " +
+	            "LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names " +
+	            "FROM highschool_menu " +
+	            "GROUP BY TO_CHAR(menu_date, 'YYYYMMDD') " +
+	            "ORDER BY menu_date";	
+	
+	try {
+	 PreparedStatement pstmt = conn.prepareStatement(query);
+	 ResultSet rs = pstmt.executeQuery();
+	 while (rs.next()) {
+	     String menuDate = rs.getString("menu_date");
+	     String menuNames = rs.getString("menu_names");
+	     currentRound.add(menuDate + ":" + menuNames);
+	     System.out.println("added : " + menuDate + ":" + menuNames);
+	 }
+	 
+	 session.setAttribute("currentRound", currentRound);
+	 
+	 rs.close();
+	}catch(Exception e){
+		e.printStackTrace();
+	}
+	
+	gameStart = true;
+}
+
+// 현재 라운드 리스트가 비어 있으면 다음 라운드로 이동
+if (currentRound.isEmpty()) {
+    if (!nextRound.isEmpty()) {
+        currentRound.addAll(nextRound);
+        nextRound.clear();
+    }
     
-    String query = "SELECT TO_CHAR(menu_date, 'YYYYMMDD') AS menu_date, " +
-                   "LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names " +
-                   "FROM highschool_menu " +
-                   "WHERE TO_CHAR(menu_date, 'YYYYMM') = ? " + // 2024년 10월 데이터만 선택
-                   "GROUP BY TO_CHAR(menu_date, 'YYYYMMDD') " + // 날짜별로 그룹화
-                   "ORDER BY menu_date";
+    session.setAttribute("currentRound", currentRound);
+    session.setAttribute("nextRound", nextRound);
+}
+
+// 선택된 후보 처리
+String selected = request.getParameter("selected");
+String unselected = request.getParameter("unselected");
+if (selected != null) {
+	
+	System.out.println("SELECTED : " + selected);
+	System.out.println("UNSELECTED : " + unselected);
+    // 선택된 후보는 다음 라운드로 이동
+    nextRound.add(selected);
+    /*
+    System.out.print("nextRound : ");
+    for(String s : nextRound) {
+    	System.out.print("," + s);
+    }
+    System.out.println();
     
-    try {
-        PreparedStatement pstmt = conn.prepareStatement(query);
-        pstmt.setString(1, menuDate); // 해당 월의 데이터 가져오기
-        ResultSet rs = pstmt.executeQuery();
-        while (rs.next()) {
-            String menuNames = rs.getString("menu_names");
-            currentCandidates.add(menuNames);
-            System.out.println("Added menu names: " + menuNames); // Add a debug log
-        }
-        rs.close();
-    } catch (SQLException e) {
-        e.printStackTrace();
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "DB 조회 중 오류가 발생했습니다.");
-        return;
+    System.out.print("currentRound : ");
+    for(String s : currentRound) {
+    	System.out.print("," + s);
     }
-    session.setAttribute("candidates", currentCandidates);
-} else {
-    System.out.println("currentCandidates: " + currentCandidates);
+    System.out.println();*/
+
+    // 선택되지 않은 후보는 현재 라운드에서 삭제
+    currentRound.removeIf(candidate -> candidate.equals(unselected));
+    currentRound.removeIf(candidate -> candidate.equals(selected));
+
+    session.setAttribute("currentRound", currentRound);
+    session.setAttribute("nextRound", nextRound);
+    System.out.print("currentRound : ");
+    for(String s : currentRound) {
+    	System.out.print(s + ", ");
+    }
+    System.out.println();
+    
+    System.out.print("nextRound : ");
+    for(String s : nextRound) {
+    	System.out.print(s + ", ");
+    }
+    System.out.println();
 }
 
-// Format menu_date to yyyy년 MM월 dd일
-String formattedMenuDate = "";
-try {
-    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyyMMdd");
-    SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy년 MM월 dd일");
-    Date date = inputFormat.parse(menuDate + "01"); // Adding "01" as a default day
-    formattedMenuDate = outputFormat.format(date);
-} catch (Exception e) {
-    e.printStackTrace();
+// 게임 종료 조건
+if (currentRound.size() == 1) {
+    // 남은 후보가 1개면 부전승 처리
+    nextRound.add(currentRound.get(0));
+    currentRound.clear();
+    session.setAttribute("currentRound", currentRound);
+    session.setAttribute("nextRound", nextRound);
 }
 
-// 게임 종료 조건: 후보가 하나 남으면 결과 페이지로 리다이렉트
-if (currentCandidates.size() <= 1) {
-    if (currentCandidates.isEmpty()) {
-        response.sendRedirect("result.jsp"); // 후보가 없으면 바로 결과 페이지로 리다이렉트
-        return;
-    }
-
-    String winner = currentCandidates.get(0); // 최종 후보가 하나라면
-    session.setAttribute("winner", winner); // 승자 저장
-
-    // DB에 선택 횟수 반영
-    String updateQuery = "UPDATE highschool_menu SET select_count = select_count + 1 WHERE menu_name = ?";
-    try (PreparedStatement updatePstmt = conn.prepareStatement(updateQuery)) {
-        updatePstmt.setString(1, winner);
-        updatePstmt.executeUpdate();
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-
+    // 최종 우승자 처리
+if (currentRound.isEmpty() && nextRound.size() == 1) {
+    session.setAttribute("winner", nextRound.get(0));
     response.sendRedirect("result.jsp");
+    gameStart = false;
     return;
 }
 
 // 랜덤으로 두 후보 선택
+if (currentRound.size() < 2) {
+    // 후보가 한 명 이하라면 부전승 처리
+    if (currentRound.size() == 1) {
+        nextRound.add(currentRound.get(0));
+    }
+    currentRound.clear();
+    session.setAttribute("currentRound", currentRound);
+    session.setAttribute("nextRound", nextRound);
+    response.sendRedirect("game.jsp"); // 다음 라운드로 이동
+    return;
+}
+
 Random random = new Random();
-int index1 = random.nextInt(currentCandidates.size());
+int index1 = random.nextInt(currentRound.size());
 int index2;
 do {
-    index2 = random.nextInt(currentCandidates.size());
+    index2 = random.nextInt(currentRound.size());
 } while (index1 == index2);
 
-String candidate1 = currentCandidates.get(index1);
-String candidate2 = currentCandidates.get(index2);
+String[] candidate1Data = currentRound.get(index1).split(":");
+String[] candidate2Data = currentRound.get(index2).split(":");
 
-// 선택된 후보 처리
-String selected = request.getParameter("selected");
-if (selected != null) {
-    currentCandidates.removeIf(c -> !c.equals(selected)); // 선택된 후보만 남김
-    session.setAttribute("candidates", currentCandidates);
+String candidate1Date = candidate1Data[0];
+String candidate1Menu = candidate1Data[1];
 
-    // DB에 선택 횟수 반영
-    String updateQuery = "UPDATE highschool_menu SET select_count = select_count + 1 WHERE menu_name = ?";
-    try (PreparedStatement updatePstmt = conn.prepareStatement(updateQuery)) {
-        updatePstmt.setString(1, selected);
-        updatePstmt.executeUpdate();
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
+String candidate2Date = candidate2Data[0];
+String candidate2Menu = candidate2Data[1];
 %>
 
 <!DOCTYPE html>
@@ -129,14 +164,14 @@ if (selected != null) {
 </head>
 <body>
     <h1>이상형 월드컵</h1>
-    <form action="game.jsp" method="post">
+    <form action="game.jsp" method="get" name="form">
         <div class="choice">
             <!-- 첫 번째 후보 -->
-            <div class="candidate" style="background-image: url('images/<%=candidate1%>.jpg');">
-                <h3><%= formattedMenuDate %></h3>
+            <div class="candidate">
+                <h3><%= candidate1Date.substring(0, 4) %>년 <%= candidate1Date.substring(4, 6) %>월 <%= candidate1Date.substring(6) %>일</h3>
                 <div>
                     <% 
-                        String[] menuItems1 = candidate1.split(", ");
+                        String[] menuItems1 = candidate1Menu.split(", ");
                         for (String menu : menuItems1) {
                     %>
                         <p><%= menu %></p>
@@ -147,11 +182,11 @@ if (selected != null) {
             </div>
 
             <!-- 두 번째 후보 -->
-            <div class="candidate" style="background-image: url('images/<%=candidate2%>.jpg');">
-                <h3><%= formattedMenuDate %></h3>
+            <div class="candidate">
+                <h3><%= candidate2Date.substring(0, 4) %>년 <%= candidate2Date.substring(4, 6) %>월 <%= candidate2Date.substring(6) %>일</h3>
                 <div>
                     <% 
-                        String[] menuItems2 = candidate2.split(", ");
+                        String[] menuItems2 = candidate2Menu.split(", ");
                         for (String menu : menuItems2) {
                     %>
                         <p><%= menu %></p>
@@ -160,13 +195,33 @@ if (selected != null) {
                     %>
                 </div>
             </div>
-
+            <br>
             <!-- Form buttons -->
             <div class="buttons">
-                <button type="submit" name="selected" value="<%=candidate1%>">선택</button>
-                <button type="submit" name="selected" value="<%=candidate2%>">선택</button>
+            	<input type="hidden" name="selected" id="selected">
+            	<input type="hidden" name="unselected" id="unselected">
+                <button type="button" id="selected1" value="<%=currentRound.get(index1)%>" onclick="select(1)">선택</button>
+                <button type="button" id="selected2" value="<%=currentRound.get(index2)%>" onclick="select(2)">선택</button>
             </div>
         </div>
     </form>
+    <script>
+    
+    	function select(n) {
+    		let selected = document.getElementById('selected');
+    		let unselected = document.getElementById('unselected');
+    		let selected1 = document.getElementById('selected1');
+    		let selected2 = document.getElementById('selected2');
+    		if(n == 1) {
+    			selected.value = selected1.value;
+    			unselected.value = selected2.value;
+    		} else {
+    			selected.value = selected2.value;
+    			unselected.value = selected1.value;
+    		}
+    		
+    		form.submit();
+    	}
+    </script>
 </body>
 </html>
