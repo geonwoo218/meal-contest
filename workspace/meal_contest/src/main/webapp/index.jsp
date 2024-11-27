@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>이상형 월드컵</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/indexStyle.css">
 </head>
 <body>
     <h1>이상형 월드컵</h1>

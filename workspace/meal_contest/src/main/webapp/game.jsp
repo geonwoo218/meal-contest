@@ -160,7 +160,7 @@ String candidate2Menu = candidate2Data[1];
 <html>
 <head>
     <title>이상형 월드컵</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/gameStyle.css">
 </head>
 <body>
     <h1>이상형 월드컵</h1>

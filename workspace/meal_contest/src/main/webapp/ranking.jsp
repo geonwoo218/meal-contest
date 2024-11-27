@@ -17,7 +17,7 @@ int rank = 1;
 <html>
 <head>
     <title>랭킹</title>
-    <link rel="stylesheet" href="assets/rank.css">
+    <link rel="stylesheet" href="assets/rankStyle.css">
 </head>
 <body>
     <h1>급식 랭킹</h1>

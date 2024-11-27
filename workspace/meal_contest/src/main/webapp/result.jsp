@@ -23,6 +23,7 @@ if (winner == null) {
 <html>
 <head>
     <title>결과</title>
+    <link rel="stylesheet" href="assets/resultStyle.css">
 </head>
 <body>
     <h1>이상형 월드컵 우승자</h1>
