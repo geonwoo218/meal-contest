@@ -122,10 +122,46 @@ String candidate2Date = candidate2Data[0];
 String candidate2Menu = candidate2Data[1];
 
 //라운드 표시
-int totalMatches = currentRound.size() / 2; // 현재 라운드의 총 대결 수
-int completedMatches = totalMatches - (currentRound.size() / 2); // 완료된 대결 수
-int currentMatch = completedMatches + 1; // 현재 대결 번호
-String totalRounds = round; // 전체 라운드 (16강, 8강 등)
+// Calculate the total rounds based on the initial round size
+    Integer initialRoundSize = (Integer) session.getAttribute("initialRoundSize");
+    if (initialRoundSize == null) {
+        initialRoundSize = currentRound.size(); // Set the initial size if not already set
+        session.setAttribute("initialRoundSize", initialRoundSize);
+    }
+
+    // Calculate total matches
+    int totalMatches = initialRoundSize / 2;
+    int completedMatches = (initialRoundSize - currentRound.size()) / 2;
+    int currentMatch = completedMatches + 1;
+
+    // Determine the current round name (e.g., 8강, 4강, 16강, etc.)
+    String totalRounds;
+    if (currentRound.size() == 2) {
+        totalRounds = "결승전";  // Finals round
+    } else {
+        switch (initialRoundSize) {
+            case 8:
+                totalRounds = "8강";
+                break;
+            case 16:
+                totalRounds = "16강";
+                break;
+            case 32:
+                totalRounds = "32강";
+                break;
+            default:
+                totalRounds = "라운드";  // Fallback case if it's not one of the known sizes
+                break;
+        }
+    }
+
+    // Display the round and match info (e.g., 8강 1/4, 4강 1/2, etc.)
+    String matchDisplay = "";
+    if ("결승전".equals(totalRounds)) {
+        matchDisplay = "결승전";
+    } else {
+        matchDisplay = totalRounds + " " + currentMatch + "/" + totalMatches;
+    }
 %>
 
 <!DOCTYPE html>
@@ -139,10 +175,7 @@ String totalRounds = round; // 전체 라운드 (16강, 8강 등)
 </head>
 <body>
 	<form action="game.jsp" method="post" name="form">
-			<div class="round">
-			    <span style="font-size: 50px;text-align: center;font-family: "Black Han Sans", sans-serif;">
-			    <%= totalRounds %>강 <%= currentMatch %> / <%= totalMatches %></span>
-			</div>
+			
 		<section>
 			<div id="leftContainer">
 				<h3><%=candidate1Date.substring(0, 4)%>년

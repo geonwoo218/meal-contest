@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="assets/indexStyle.css">
 </head>
 <body>
-    <h1>학교 급식 이상형 월드컵</h1>
+    <h1>창경고 급식 월드컵</h1>
     <form action="game.jsp" method="post" name="startForm">
     <select name="round">
     <option value="">라운드 수를 선택해주세요.</option>

@@ -1,74 +1,84 @@
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.PreparedStatement"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" %>
-<%@include file="dbcon.jsp" %>
-<%
-String query = "SELECT TO_CHAR(h1.menu_date,'YYYY-mm-DD'), h1.menu_name, h1.select_count, " +
-               "COUNT(*) OVER(PARTITION BY TO_CHAR(h1.menu_date,'YYYY-mm-DD')) AS menu_count, " +
-               "AVG(h1.select_count) OVER(PARTITION BY TO_CHAR(h1.menu_date,'YYYY-mm-DD')) AS avg_select_count " +
-               "FROM highschool_menu h1 " +
-               "ORDER BY avg_select_count DESC, TO_CHAR(h1.menu_date,'YYYY-mm-DD'), h1.menu_name";
-PreparedStatement pstmt = con.prepareStatement(query);
-ResultSet rs = pstmt.executeQuery();
-
-int rank = 1;
-%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>랭킹</title>
-    <link rel="stylesheet" href="assets/rankStyle.css">
+<meta charset="UTF-8">
+<title>랭킹</title>
+<style>
+ 
+</style>
+<link rel="stylesheet" href="assets/rankStyle.css">
 </head>
 <body>
-    <h1>급식 랭킹</h1>
-    <table border="1">
+<%@include file="dbcon.jsp" %>
+<div id="rankBox">
+<h1>랭킹</h1>
+    <table>
         <tr>
-        	<th>랭킹</th>
+            <th>순위</th>
+            <th style="width: 80px;">이미지</th>
             <th>날짜</th>
-            <th>메뉴 이름</th>
-            <th>선택 횟수</th>
-            <th>사진 보기</th>
+            <th></th>
         </tr>
-    <%
-    String currentDate = "";
-    int menuCount = 0;
-
-    while (rs.next()) {
-        String menuDate = rs.getString(1);
-        String menuName = rs.getString("menu_name");
-        int selectCount = rs.getInt("select_count");
-        int countInDate = rs.getInt("menu_count");
-        double avgSelectCount = rs.getDouble("avg_select_count");
-
-        if (!menuDate.equals(currentDate)) {
-            currentDate = menuDate;
-            menuCount = countInDate; // 그룹의 메뉴 수 설정
-    %>
-        <tr>
-        	<td rowspan="<%=menuCount %>"><%=rank %>등</td>
-            <td rowspan="<%= menuCount %>"><%= currentDate %></td>
-            <td class="menuname"><%= menuName %></td>
-            <td rowspan="<%= menuCount %>"><%= selectCount %></td>
-            <td rowspan="<%= menuCount %>">
-                <button type="button">사진보기</button>
-            </td>
+        <%
+            String sql = "SELECT RANK() OVER (ORDER BY select_count DESC) AS rank, "+
+            "TO_CHAR(menu_date, 'yyyymmdd') AS menu_date,  "+
+            "LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names "+ 
+            "FROM highschool_menu  "+
+            "GROUP BY to_char(menu_date,'yyyymmdd'), select_count";
+            PreparedStatement pstmt = con.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while(rs.next()){
+            	String menudate = rs.getString(2);
+        %>
+        <tr class="menu-box">
+            <td class="rank"><%=rs.getString(1) %></td>
+            <td class="img"><img src="assets/images/<%=rs.getString(2) %>.jpg"></td>
+            <td class="menu"><%=menudate.substring(0, 4)%>년 
+            <%=menudate.substring(4, 6)%>월	<%=menudate.substring(6)%>일
+            <Br> <span style="font-size: 12px;">(<%=rs.getString(3) %>)</span></td>
+            <td><button type="button" class="ibtn" onclick="menuinfo('<%=rs.getString(2)%>', '<%=rs.getString(3)%>')">자세히보기</button></td> 
         </tr>
-    <%
-    rank ++;
-        } else {
-    %>
-        <tr>
-            <td class="menuname"><%= menuName %></td>
-        </tr>
-    <%
-        }
-    }
-    %>
+        <%
+            }
+        %>
     </table>
-    <a href="index.jsp">메인으로</a>
+    <button class="homeBtn" id="homeBtn" onclick="window.location.href='index.jsp'">다시하기</button>
+</div>
+
+<!-- 팝업 및 커버 -->
+<div id="cover" onclick="closePopup()"></div>
+<div id="popup">
+    	<img id="popup-img" src="" alt="">
+    	<div id="popDate"></div>
+    	<div id="menulist"></div>
+</div>
+
+<script type="text/javascript">
+function menuinfo(menudate, menulist) {
+	const imgSrc = "assets/images/"+menudate+".jpg";
+	const formattedDate = menudate.substring(0, 4) + "년 " +
+    	menudate.substring(4, 6) + "월 " +
+    	menudate.substring(6) + "일";
+	
+    document.getElementById('popup-img').src = imgSrc;
+    document.getElementById('popDate').innerText = formattedDate;
+    document.getElementById('menulist').innerText = menulist;
+
+    // 팝업과 커버 표시
+    document.getElementById('cover').style.display = 'block';
+    document.getElementById('popup').style.display = 'block';
+}
+
+function closePopup() {
+    // 팝업과 커버 숨기기
+    document.getElementById('cover').style.display = 'none';
+    document.getElementById('popup').style.display = 'none';
+}
+</script>
 </body>
 </html>
-<%
-if (rs != null) rs.close();
-if (pstmt != null) pstmt.close();
-%>
