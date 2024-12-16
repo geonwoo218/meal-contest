@@ -21,31 +21,49 @@
             <th>순위</th>
             <th style="width: 80px;">이미지</th>
             <th>날짜</th>
+            <th>우승 비율</th>
             <th></th>
         </tr>
         <%
-            String sql = "SELECT RANK() OVER (ORDER BY select_count DESC) AS rank, "+
-            "TO_CHAR(menu_date, 'yyyymmdd') AS menu_date,  "+
-            "LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names "+ 
-            "FROM highschool_menu  "+
-            "GROUP BY to_char(menu_date,'yyyymmdd'), select_count";
-            PreparedStatement pstmt = con.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while(rs.next()){
-            	String menudate = rs.getString(2);
-        %>
-        <tr class="menu-box">
-            <td class="rank"><%=rs.getString(1) %></td>
-            <td class="img"><img src="assets/images/<%=rs.getString(2) %>.jpg"></td>
-            <td class="menu"><%=menudate.substring(0, 4)%>년 
-            <%=menudate.substring(4, 6)%>월	<%=menudate.substring(6)%>일
-            <Br> <span style="font-size: 12px;">(<%=rs.getString(3) %>)</span></td>
-            <td><button type="button" class="ibtn" onclick="menuinfo('<%=rs.getString(2)%>', '<%=rs.getString(3)%>')">자세히보기</button></td> 
-        </tr>
-        <%
-            }
-        %>
+		    String sql = "SELECT RANK() OVER (ORDER BY select_count DESC) AS rank, select_count, " +
+		                 "TO_CHAR(menu_date, 'yyyymmdd') AS menu_date, " +
+		                 "LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names, " +
+		                 "ROUND(select_count / (SUM(select_count) OVER ()) * 100, 2) AS win_rate " +
+		                 "FROM highschool_menu " +
+		                 "GROUP BY TO_CHAR(menu_date, 'yyyymmdd'), select_count";
+		
+		    PreparedStatement pstmt = con.prepareStatement(sql);
+		    ResultSet rs = pstmt.executeQuery();
+		
+		    while (rs.next()) {
+		        String menudate = rs.getString("menu_date");
+		        String winRate = rs.getString("win_rate"); // 우승 비율 값
+		%>
+		<tr class="menu-box">
+		    <td class="rank"><%= rs.getString("rank") %></td>
+		    <td class="img"><img src="assets/images/<%= menudate %>.jpg"></td>
+		    <td class="menu">
+		        <%= menudate.substring(0, 4) %>년 
+		        <%= menudate.substring(4, 6) %>월 
+		        <%= menudate.substring(6) %>일
+		        <br> <span style="font-size: 12px;">(<%= menudate %>)</span>
+		    </td>
+		    <td class="win-rate">
+		        <div class="win-bar-container">
+		            <div class="win-bar" style="width: <%= winRate %>%;">
+		                <%= winRate %>%
+		            </div>
+		        </div>
+		    </td>
+		    <td>
+		        <button type="button" class="ibtn" onclick="menuinfo('<%= menudate %>', '<%= rs.getString("menu_names") %>')">
+		            자세히보기
+		        </button>
+		    </td>
+		</tr>
+		<%
+		    }
+		%>
     </table>
     <button class="homeBtn" id="homeBtn" onclick="window.location.href='index.jsp'">다시하기</button>
 </div>

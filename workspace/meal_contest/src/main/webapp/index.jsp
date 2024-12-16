@@ -17,7 +17,8 @@
     <option value="16">16강</option>
     <option value="32">32강</option>
     </select>
-        <button type="button" onclick="start()">게임 시작</button>
+        <button type="button" onclick="start()" class="btn1">게임 시작</button>
+        <button type="button" onclick="window.location.href='rank.jsp'" class="btn2">랭킹</button>
     </form>
 </body>
 <script type="text/javascript">

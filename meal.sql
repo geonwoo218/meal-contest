@@ -291,21 +291,3 @@ FROM highschool_menu
 GROUP BY TO_CHAR(menu_date, 'YYYYMMDD')
 ORDER BY menu_date;
 
---랭킹 조회
-SELECT RANK() OVER (ORDER BY select_count DESC) AS rank,
-select_count,
-TO_CHAR(menu_date, 'yyyymmdd') AS menu_date, 
-LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names 
-FROM highschool_menu
-GROUP BY to_char(menu_date,'yyyymmdd'), select_count;
-
-SELECT 
-    RANK() OVER (ORDER BY select_count DESC) AS rank,
-    select_count,
-    TO_CHAR(menu_date, 'yyyymmdd') AS menu_date,  
-    LISTAGG(menu_name, ', ') WITHIN GROUP (ORDER BY menu_name) AS menu_names,
-    ROUND(select_count / (SUM(select_count) OVER ()) * 100, 2) AS win_rate
-FROM 
-    highschool_menu
-GROUP BY 
-    TO_CHAR(menu_date, 'yyyymmdd'), select_count;

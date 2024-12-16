@@ -12,8 +12,6 @@ if (conn == null) {
     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "DB 연결이 초기화되지 않았습니다.");
     return;
 }
-//라운드 수 
-String round = request.getParameter("round");
 
 // 현재 라운드와 다음 라운드 Set 초기화
 Set<String> currentRound = (Set<String>) session.getAttribute("currentRound");
@@ -122,46 +120,21 @@ String candidate2Date = candidate2Data[0];
 String candidate2Menu = candidate2Data[1];
 
 //라운드 표시
-// Calculate the total rounds based on the initial round size
-    Integer initialRoundSize = (Integer) session.getAttribute("initialRoundSize");
-    if (initialRoundSize == null) {
-        initialRoundSize = currentRound.size(); // Set the initial size if not already set
-        session.setAttribute("initialRoundSize", initialRoundSize);
-    }
+//라운드 수 
+String round = request.getParameter("round");
+// 현재 라운드 총 경기 수와 진행 중인 경기 수 계산
+int totalRounds = Integer.parseInt(round); // 예: 8, 4, 2 등
+int totalMatches = totalRounds / 2; // 8강 = 4경기, 4강 = 2경기, 2강 = 1경기 (결승전 제외)
+int currentMatch = totalMatches - (currentRound.size() / 2) + 1; // 진행 중인 경기 수 계산
 
-    // Calculate total matches
-    int totalMatches = initialRoundSize / 2;
-    int completedMatches = (initialRoundSize - currentRound.size()) / 2;
-    int currentMatch = completedMatches + 1;
-
-    // Determine the current round name (e.g., 8강, 4강, 16강, etc.)
-    String totalRounds;
-    if (currentRound.size() == 2) {
-        totalRounds = "결승전";  // Finals round
-    } else {
-        switch (initialRoundSize) {
-            case 8:
-                totalRounds = "8강";
-                break;
-            case 16:
-                totalRounds = "16강";
-                break;
-            case 32:
-                totalRounds = "32강";
-                break;
-            default:
-                totalRounds = "라운드";  // Fallback case if it's not one of the known sizes
-                break;
-        }
-    }
-
-    // Display the round and match info (e.g., 8강 1/4, 4강 1/2, etc.)
-    String matchDisplay = "";
-    if ("결승전".equals(totalRounds)) {
-        matchDisplay = "결승전";
-    } else {
-        matchDisplay = totalRounds + " " + currentMatch + "/" + totalMatches;
-    }
+String matchDisplay;
+if (currentRound.size() == 2) { 
+    // 결승전일 경우
+    matchDisplay = "결승전";
+} else {
+    // 현재 라운드 표시
+    matchDisplay = totalRounds + "강 " + currentMatch + "/" + totalMatches;
+}
 %>
 
 <!DOCTYPE html>
@@ -175,8 +148,11 @@ String candidate2Menu = candidate2Data[1];
 </head>
 <body>
 	<form action="game.jsp" method="post" name="form">
-			
+		<div class="round">
+			    <span><%= matchDisplay %></span>
+			</div>	
 		<section>
+			
 			<div id="leftContainer">
 				<h3><%=candidate1Date.substring(0, 4)%>년
 					<%=candidate1Date.substring(4, 6)%>월
