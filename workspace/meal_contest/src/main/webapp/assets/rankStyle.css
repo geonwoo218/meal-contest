@@ -156,9 +156,8 @@ tr:hover {
 
 #homeBtn {
 	position: fixed;
-    top: 50%;
-    right: 100px;
-    transform: translateY(-50%);
+    top: 50px;
+    right: 50px;
     background-color: #a8d5e2;
     color: #ffffff;
     border: none;
@@ -169,8 +168,8 @@ tr:hover {
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease, transform 0.2s ease;
-    width: 140px;
-    height: 80px;
+    width: 120px;
+    height: 60px;
 }
 
 #homeBtn:hover {

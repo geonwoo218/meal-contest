@@ -1,9 +1,13 @@
 @charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap');
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Arial', sans-serif;
+    font-family: "Jua",serif;
+    font-weight: 400;
+  	font-style: normal;
 }
 
 body {
@@ -17,13 +21,15 @@ body {
 }
 
 section {
-   	width: 80%;
-    height: 80vh;
+   	width: 67%;
+    min-height: 80vh;
     background: #e5e9ff;
     border-radius: 10px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    display: flex;
+    display: flex
+;
     overflow: hidden;
+    padding: 20px;
 }
 
 #winner {
@@ -38,7 +44,6 @@ section {
 }
 
 #winner > span {
-	font-family: "Black Han Sans", sans-serif;
     font-size: 3rem;
     color: #4a90e2;
     text-shadow: 1px 1px 10px #ffffff;
@@ -53,21 +58,21 @@ section {
     max-height: 70%;
     border-radius: 10px;
     object-fit: cover;
+    margin-bottom: 20px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #menulist {
-    width: 90%;
-    height: 16%;
+    width: 80%;
+    height: 12%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    column-gap: 27px;
-    row-gap: 19px
+    column-gap: 20px;
+    row-gap: 10px;
 }
 
 .menu {
-	padding-top: 15px;
-	font-family: "Black Han Sans", sans-serif;
+	padding-top:10px;
     border-radius: 5px;
     background: #ffffffd1;
     color: #5a5a5a;;
@@ -79,12 +84,12 @@ section {
 
 #buttons {
     width: 25%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    gap: 20px;
 }
 
 .cBtn {
@@ -111,13 +116,8 @@ section {
 }
 
 .cBtn span{
-	font-size: 25px;
-    width: 150px;
-    line-height: 43px;
-    font-weight: bold;
-    height: 43px;
+	font-size: 30px;
     color: #ffffff;
-    display: block;
     text-shadow: 1px 1px 6px #4c4c4c;
 }
 .cBtn:hover {
@@ -141,4 +141,8 @@ section {
 
 #homeBtn:hover {
     background: #3d8c41;
+}
+
+#dateSpan {
+	font-size: 1.5rem;
 }

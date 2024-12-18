@@ -9,7 +9,6 @@
     String dbUser = "system";
     String dbPassword = "1234";
     Connection con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", dbUser, dbPassword);
-    session.setAttribute("con", con);
 
 %>
 </html>
