@@ -40,10 +40,8 @@
 			<tr class="menu-box">
 				<td class="rank"><%=rs.getString("rank")%></td>
 				<td class="img"><img src="assets/images/<%=menudate%>.jpg"></td>
-				<td class="menu"><%=menudate.substring(0, 4)%>년 <%=menudate.substring(4, 6)%>월
-					<%=menudate.substring(6)%>일 <br> <span
-					style="font-size: 12px;">
-				</span></td>
+				<td class="date"><%=menudate.substring(0, 4)%>년 <%=menudate.substring(4, 6)%>월
+					<%=menudate.substring(6)%>일 </td>
 				<td class="win-rate">
 					<div class="win-bar-container">
 						<div class="win-bar" style="width: <%=winRate%>%;">
@@ -68,6 +66,7 @@
 	<!-- 팝업 및 커버 -->
 	<div id="cover" onclick="closePopup()"></div>
 	<div id="popup">
+		<button id="popup-close" onclick="closePopup()">X</button>
 		<img id="popup-img" src="" alt="">
 		<div id="popDate"></div>
 		<div id="menulist"></div>
