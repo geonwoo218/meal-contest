@@ -30,7 +30,6 @@ insert into highschool_menu values('20241008', '건파래볶음',0);
 insert into highschool_menu values('20241008', '포테이토 치즈 명태까스/소스',0);
 insert into highschool_menu values('20241008', '총각김치',0);
 insert into highschool_menu values('20241008', '찰보리빵',0);
-
 insert into highschool_menu values('20241010', '옥수수밥',0);
 insert into highschool_menu values('20241010', '단팥찐빵',0);
 insert into highschool_menu values('20241010', '건새우근대국',0);
